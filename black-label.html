@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BLACK LABEL — Barbershop Booking &amp; Management System · Айдар Памиров</title>
+<meta name="description" content="BLACK LABEL — веб-система онлайн-записи и управления барбершопом: запись клиентов, мастера, услуги и цены, расписание, Telegram-уведомления. Проект Айдара Памирова на React, Supabase и Vercel.">
+<link rel="canonical" href="https://aidarpamirov.github.io/black-label.html">
+<meta property="og:title" content="BLACK LABEL — Barbershop Booking & Management System">
+<meta property="og:description" content="Онлайн-запись, админ-панель и Telegram-уведомления для барбершопа. Кейс из портфолио Айдара Памирова.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://aidarpamirov.github.io/black-label.html">
+<meta property="og:image" content="https://aidarpamirov.github.io/black-label/cover.png">
+<meta name="theme-color" content="#000000">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Oranienbaum&family=Unbounded:wght@700&display=swap" rel="stylesheet">
+<style>
+/* Палитра кейса повторяет сам продукт BLACK LABEL: чёрный, графит, бумага, бронза. */
+:root{
+  --black:#000; --graphite:#151618; --graphite-2:#1e1f22; --graphite-3:#2a2b2f;
+  --paper:#f3f1ed; --mute:#a39f98; --bronze:#b8945f; --bronze-dim:#8a6f48;
+  --line:rgba(255,255,255,.12); --line-2:rgba(255,255,255,.22);
+  --display:"Oranienbaum","Bodoni Moda",Didot,"Times New Roman",serif;
+  --body:"Onest",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --pad:clamp(16px,4vw,40px);
+  box-sizing:border-box;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{background:var(--black); scroll-behavior:smooth; scroll-padding-top:80px; -webkit-text-size-adjust:100%}
+body{margin:0; background:var(--black); color:var(--paper); font-family:var(--body); font-size:17px; line-height:1.65; -webkit-font-smoothing:antialiased; overflow-x:clip; padding-bottom:env(safe-area-inset-bottom,0px)}
+a{color:var(--bronze); text-underline-offset:3px}
+a:hover{color:var(--paper)}
+:focus-visible{outline:2px solid var(--bronze); outline-offset:3px}
+img{max-width:100%; display:block}
+.wrap{max-width:1120px; margin:0 auto; padding:0 var(--pad)}
+.narrow{max-width:760px}
+.sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+.skip{position:absolute; left:-999px; top:8px; background:var(--bronze); color:var(--black); padding:8px 14px; z-index:50}
+.skip:focus{left:8px}
+
+/* Шапка портфолио */
+header{position:sticky; top:0; z-index:20; background:rgba(0,0,0,.85); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border-bottom:1px solid var(--line); padding-top:env(safe-area-inset-top,0px)}
+.bar{display:flex; align-items:center; justify-content:space-between; height:62px; gap:16px}
+.back{display:flex; align-items:center; gap:10px; color:var(--paper); text-decoration:none; font-family:"Unbounded",var(--body); font-weight:700; font-size:14px; letter-spacing:.02em}
+.back svg{flex:none}
+nav{display:flex; gap:4px}
+nav a{color:var(--mute); text-decoration:none; font-size:15px; padding:8px 12px}
+nav a:hover{color:var(--paper)}
+@media(max-width:640px){nav a:not(:last-child){display:none}}
+
+/* Hero */
+.hero{padding:clamp(56px,9vw,112px) 0 clamp(48px,7vw,80px); text-align:center; border-bottom:1px solid var(--line)}
+.crumb{color:var(--mute); font-size:15px; margin:0 0 28px}
+.crumb a{color:var(--mute)}
+h1{font-family:var(--display); font-weight:400; font-size:clamp(52px,12vw,148px); line-height:.92; letter-spacing:.04em; margin:0 0 18px}
+.subtitle{font-size:clamp(16px,2vw,19px); letter-spacing:.32em; text-transform:uppercase; color:var(--mute); margin:0 0 30px; padding-left:.32em}
+.slogan{font-family:var(--display); font-size:clamp(22px,3vw,30px); line-height:1.3; max-width:24em; margin:0 auto 36px}
+.row{display:flex; gap:12px; flex-wrap:wrap; justify-content:center}
+.btn{display:inline-flex; align-items:center; gap:9px; padding:14px 26px; font-size:16px; font-weight:500; text-decoration:none; color:var(--paper); border:1px solid var(--line-2); transition:background .2s, color .2s, border-color .2s}
+.btn:hover{border-color:var(--paper); color:var(--paper)}
+.btn.p{background:var(--bronze); border-color:var(--bronze); color:var(--black)}
+.btn.p:hover{background:var(--paper); border-color:var(--paper); color:var(--black)}
+.cover{margin:clamp(48px,7vw,80px) auto 0; max-width:1040px; border:1px solid var(--line); padding:10px; background:var(--graphite)}
+.cover figcaption{font-size:14px; color:var(--mute); padding:12px 4px 2px; text-align:left}
+
+/* Секции */
+section{padding:clamp(56px,8vw,104px) 0; border-bottom:1px solid var(--line)}
+.label{display:flex; align-items:center; gap:14px; color:var(--bronze); font-size:15px; margin:0 0 14px}
+.label::after{content:""; height:1px; width:48px; background:var(--bronze-dim)}
+h2{font-family:var(--display); font-weight:400; font-size:clamp(34px,5.4vw,60px); line-height:1.02; margin:0 0 26px}
+h3{font-weight:600; font-size:18px; line-height:1.35; margin:0 0 8px}
+p{margin:0 0 16px}
+.muted{color:var(--mute)}
+
+.two{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:clamp(24px,5vw,64px)}
+@media(max-width:820px){.two{grid-template-columns:1fr}}
+
+.plain{list-style:none; margin:0; padding:0; border-top:1px solid var(--line)}
+.plain li{padding:14px 0 14px 28px; border-bottom:1px solid var(--line); position:relative}
+.plain li::before{content:""; position:absolute; left:2px; top:24px; width:12px; height:1px; background:var(--bronze)}
+
+/* Возможности: сетка с линиями, без коробок */
+.features{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border-top:1px solid var(--line); border-left:1px solid var(--line); margin-top:8px}
+.features div{padding:26px 24px 22px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); background:var(--black); transition:background .25s}
+.features div:hover{background:var(--graphite)}
+.features h3{font-family:var(--display); font-weight:400; font-size:24px; margin-bottom:6px}
+.features p{margin:0; color:var(--mute); font-size:15.5px}
+@media(max-width:900px){.features{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.features{grid-template-columns:1fr}}
+
+/* Архитектура */
+.arch{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,360px); gap:clamp(24px,5vw,56px); align-items:start}
+.flow{display:flex; flex-direction:column; align-items:stretch}
+.node{border:1px solid var(--line-2); background:var(--graphite); padding:18px 20px}
+.node b{display:block; font-weight:600}
+.node span{display:block; color:var(--mute); font-size:15px}
+.node.core{border-color:var(--bronze); background:var(--graphite-2)}
+.link{display:flex; align-items:center; gap:14px; padding:10px 0 10px 22px; color:var(--mute); font-size:14.5px}
+.link::before{content:""; width:1px; height:34px; background:var(--bronze-dim); flex:none}
+.side .node{border-style:dashed}
+.side .note{color:var(--mute); font-size:15px; margin-top:14px}
+@media(max-width:820px){.arch{grid-template-columns:1fr}}
+.fineprint{color:var(--mute); font-size:15px; margin-top:24px; max-width:44em}
+
+/* Скриншоты */
+.shots{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px}
+.shot{margin:0}
+.shot .frame{aspect-ratio:10/16; border:1px dashed var(--line-2); background:repeating-linear-gradient(135deg,var(--graphite) 0 14px,var(--graphite-2) 14px 28px); display:grid; place-items:center; text-align:center; padding:20px; color:var(--mute); font-size:14.5px}
+.shot.wide .frame{aspect-ratio:16/10}
+.shot .frame img{width:100%; height:100%; object-fit:cover; object-position:top}
+.shot.has-img .frame{padding:0; border-style:solid; border-color:var(--line); background:var(--graphite)}
+.shot code{color:var(--paper); font-size:13.5px}
+.shot figcaption{font-size:15px; padding-top:10px}
+@media(max-width:820px){.shots{grid-template-columns:1fr}.shot .frame{aspect-ratio:16/11}}
+
+.stack{display:flex; flex-wrap:wrap; gap:8px; list-style:none; margin:0; padding:0}
+.stack li{border:1px solid var(--line-2); padding:6px 14px; font-size:15px}
+
+.links{border-top:1px solid var(--line)}
+.links a{display:flex; justify-content:space-between; align-items:baseline; gap:16px; flex-wrap:wrap; padding:24px 0; border-bottom:1px solid var(--line); color:var(--paper); text-decoration:none; font-family:var(--display); font-size:clamp(26px,4vw,40px)}
+.links a span{font-family:var(--body); font-size:15px; color:var(--mute); overflow-wrap:anywhere}
+.links a:hover{color:var(--bronze)}
+
+footer{padding:36px 0 calc(44px + env(safe-area-inset-bottom,0px)); color:var(--mute); font-size:15px}
+footer .wrap{display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap}
+footer a{color:var(--paper)}
+
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Перейти к содержанию</a>
+<header>
+  <div class="wrap bar">
+    <a class="back" href="index.html#black-label">
+      <svg width="26" height="26" viewBox="0 0 28 28" aria-hidden="true"><path d="M2 22 10 9l4 6 3-4 9 11Z" fill="none" stroke="#b8945f" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      Айдар Памиров
+    </a>
+    <nav aria-label="Навигация портфолио">
+      <a href="index.html#about">Обо мне</a>
+      <a href="index.html#contact">Контакты</a>
+      <a href="index.html#projects">Все проекты</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="hero">
+    <div class="wrap">
+      <p class="crumb"><a href="index.html#projects">Проекты</a> / BLACK LABEL</p>
+      <h1>BLACK LABEL</h1>
+      <p class="subtitle">Barbershop Booking &amp; Management System</p>
+      <p class="slogan">Онлайн-запись для клиентов и спокойная админ-панель для владельца: в одной системе, без двойных записей.</p>
+      <div class="row">
+        <a class="btn p" href="https://black-label-barbershop.vercel.app/" target="_blank" rel="noopener noreferrer">Live Demo
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M5 2h7v7M12 2 4 10" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="sr">(откроется в новой вкладке)</span></a>
+        <a class="btn" href="https://github.com/AidarPamirov/black-label-barbershop" target="_blank" rel="noopener noreferrer">Исходный код<span class="sr"> (откроется в новой вкладке)</span></a>
+      </div>
+      <figure class="cover">
+        <img src="black-label/cover.png" alt="Обложка BLACK LABEL Barbershop: логотип в бронзовой рамке на чёрном фоне" width="1200" height="630">
+        <figcaption>Обложка проекта для превью в соцсетях. Скриншоты интерфейса ниже.</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <section id="overview">
+    <div class="wrap two">
+      <div>
+        <p class="label">Overview</p>
+        <h2>Что это</h2>
+      </div>
+      <div>
+        <p>BLACK LABEL — веб-система для барбершопа из двух частей. Первая — сайт для клиентов: прайс, мастера, галерея, контакты и онлайн-запись в шесть шагов: услуга, мастер, дата, свободное время, контакты, подтверждение.</p>
+        <p>Вторая — закрытая админ-панель для владельца. В ней видно все записи по дням и по мастерам, можно менять статус, отменять и переносить записи, править услуги и цены, мастеров, часы работы и выходные.</p>
+        <p class="muted">Демо-версия собрана под барбершоп в Бишкеке. Фото на сайте — стоковые, а у мастеров и прайса стоит пометка, что это демо-данные.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="problem">
+    <div class="wrap two">
+      <div>
+        <p class="label">The Problem</p>
+        <h2>Какие задачи решает</h2>
+        <p class="muted">Когда запись ведётся в мессенджере и тетради, легко записать двоих на одно время или забыть про отмену.</p>
+      </div>
+      <ul class="plain">
+        <li>Управление записями клиентов</li>
+        <li>Контроль доступности мастеров</li>
+        <li>Изменение цен и услуг</li>
+        <li>Изменение графика работы</li>
+        <li>Обработка отмен</li>
+        <li>Уведомление администратора о новых записях</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="wrap">
+      <p class="label">Key Features</p>
+      <h2>Возможности</h2>
+      <div class="features">
+        <div><h3>Appointment Booking</h3><p>Клиент сам создаёт запись: выбирает услугу, мастера, дату и свободное время.</p></div>
+        <div><h3>Staff Management</h3><p>Добавление и редактирование мастеров, скрытие мастера с сайта.</p></div>
+        <div><h3>Service Management</h3><p>Услуги, цены и длительность меняются в админке и сразу видны на сайте.</p></div>
+        <div><h3>Schedule Management</h3><p>Рабочие дни и часы каждого мастера, выходные и отпуска.</p></div>
+        <div><h3>Availability Control</h3><p>Уже занятое время нельзя забронировать, даже если два клиента нажали одновременно.</p></div>
+        <div><h3>Booking Cancellation</h3><p>Отмена записи, сумма в админке пересчитывается без отменённых записей.</p></div>
+        <div><h3>Revenue Overview</h3><p>Сумма по записям за выбранный период в админ-панели.</p></div>
+        <div><h3>Telegram Notifications</h3><p>Сообщение о новой записи: клиент, телефон, услуга, мастер, дата и время.</p></div>
+        <div><h3>Cross-device Data Persistence</h3><p>Данные хранятся в базе, поэтому с ноутбука и телефона видно одно и то же.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="architecture">
+    <div class="wrap">
+      <p class="label">Architecture</p>
+      <h2>Как устроено</h2>
+      <div class="arch">
+        <div class="flow" role="img" aria-label="Схема: сайт для клиентов и админ-панель работают через Supabase; Supabase отправляет уведомления в Telegram">
+          <div class="node"><b>Сайт для клиентов</b><span>React, TypeScript, Vite. Опубликован на Vercel.</span></div>
+          <div class="link">услуги, свободное время, новая запись</div>
+          <div class="node core"><b>Supabase</b><span>База PostgreSQL. Запись создаёт серверная функция: она берёт цену из базы и проверяет, свободно ли время. Доступ к таблицам ограничен правилами Row Level Security.</span></div>
+          <div class="link">записи, мастера, услуги, график</div>
+          <div class="node"><b>Админ-панель /admin</b><span>Вход по email и паролю через Supabase Auth, права проверяет база.</span></div>
+        </div>
+        <div class="side">
+          <div class="node"><b>Telegram Bot API</b><span>Отдельная интеграция: после новой записи база сама отправляет сообщение в чат администратора.</span></div>
+          <p class="note">Токен бота хранится зашифрованным в Supabase Vault, в коде сайта его нет. Если Telegram недоступен, запись всё равно сохраняется.</p>
+        </div>
+      </div>
+      <p class="fineprint">Схема упрощена и описывает то, что есть в исходном коде проекта: отдельного сервера нет, сайт и админ-панель обращаются к Supabase напрямую.</p>
+    </div>
+  </section>
+
+  <section id="screens">
+    <div class="wrap">
+      <p class="label">Screens</p>
+      <h2>Интерфейс</h2>
+      <div class="shots">
+        <figure class="shot" data-src="black-label/booking.png">
+          <div class="frame"><span>Здесь будет скриншот онлайн-записи<br><code>black-label/booking.png</code></span></div>
+          <figcaption>Онлайн-запись на телефоне</figcaption>
+        </figure>
+        <figure class="shot" data-src="black-label/admin.png">
+          <div class="frame"><span>Здесь будет скриншот админ-панели<br><code>black-label/admin.png</code></span></div>
+          <figcaption>Админ-панель: записи и сумма</figcaption>
+        </figure>
+        <figure class="shot" data-src="black-label/telegram.png">
+          <div class="frame"><span>Здесь будет скриншот уведомления<br><code>black-label/telegram.png</code></span></div>
+          <figcaption>Уведомление в Telegram</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="testing">
+    <div class="wrap">
+      <p class="label">Testing</p>
+      <h2>Как проверял</h2>
+      <div class="two">
+        <div>
+          <h3>Вручную, на опубликованном сайте</h3>
+          <ul class="plain">
+            <li>Создание записи</li>
+            <li>Запрет бронирования занятого времени</li>
+            <li>Отмена записи</li>
+            <li>Повторная отмена не вычитает сумму ещё раз</li>
+            <li>Данные одинаковые на ноутбуке и телефоне</li>
+            <li>Уведомление приходит в Telegram</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Автопроверки в репозитории</h3>
+          <ul class="plain">
+            <li>Модульные тесты логики записи</li>
+            <li>SQL-тесты базы на PostgreSQL 16: права доступа, выходные, перенос, уведомления без дублей</li>
+            <li>10 одновременных попыток занять одно время: сохраняется ровно одна запись</li>
+            <li>Браузерная проверка опубликованного сайта на ширине от 360 до 1440 px</li>
+            <li>GitHub Actions запускает проверки при каждом изменении</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="role">
+    <div class="wrap two">
+      <div>
+        <p class="label">My Role</p>
+        <h2>Что делал я</h2>
+      </div>
+      <div>
+        <ul class="plain">
+          <li>Определил требования и сценарии: что делает клиент, что делает владелец</li>
+          <li>Разрабатывал с помощью ИИ (AI-assisted development): ставил задачи, проверял и правил результат</li>
+          <li>Собирал и связывал функции в работающую систему</li>
+          <li>Подключил Supabase и Telegram-бота</li>
+          <li>Проверил основные сценарии работы</li>
+        </ul>
+        <p class="muted" style="margin-top:20px">Код написан не полностью вручную: большую часть я делал вместе с ИИ-ассистентом и отвечал за постановку задач, интеграцию и проверку.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="stack">
+    <div class="wrap">
+      <p class="label">Stack</p>
+      <h2>Технологии</h2>
+      <ul class="stack" aria-label="Технологии проекта">
+        <li>React 19</li><li>TypeScript</li><li>Vite</li><li>Tailwind CSS</li><li>Supabase: PostgreSQL, Auth, Vault</li><li>Vercel</li><li>Telegram Bot API</li><li>GitHub Actions</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="links">
+    <div class="wrap">
+      <p class="label">Project Links</p>
+      <h2>Ссылки</h2>
+      <div class="links">
+        <a href="https://black-label-barbershop.vercel.app/" target="_blank" rel="noopener noreferrer">Live Demo <span>black-label-barbershop.vercel.app</span></a>
+        <a href="https://github.com/AidarPamirov/black-label-barbershop" target="_blank" rel="noopener noreferrer">Repository <span>github.com/AidarPamirov/black-label-barbershop</span></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>© 2026 Айдар Памиров, Aidar Pamirov</div>
+    <div>Другой проект: <a href="index.html#kapchyk">Капчык, трекер денег для Android</a></div>
+  </div>
+</footer>
+
+<script>
+// Показываем настоящий скриншот, если файл уже загружен в репозиторий; иначе остаётся заглушка.
+document.querySelectorAll('.shot[data-src]').forEach(function (fig) {
+  var src = fig.getAttribute('data-src');
+  var img = new Image();
+  img.onload = function () {
+    img.alt = fig.querySelector('figcaption').textContent;
+    var frame = fig.querySelector('.frame');
+    frame.textContent = '';
+    frame.appendChild(img);
+    fig.classList.add('has-img');
+  };
+  img.src = src;
+});
+</script>
+</body>
+</html>
