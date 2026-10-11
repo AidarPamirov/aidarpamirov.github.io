@@ -40,14 +40,8 @@ img{max-width:100%; display:block}
 .skip{position:absolute; left:-999px; top:8px; background:var(--ice); color:var(--ink); padding:8px 14px; border-radius:6px; z-index:50}
 .skip:focus{left:8px}
 
-/* Строка статуса */
-.status{background:var(--ridge); border-bottom:1px solid var(--line); font-size:14px; color:var(--mist); padding-top:env(safe-area-inset-top,0px)}
-.status .wrap{display:flex; align-items:center; gap:10px; min-height:40px; padding-top:6px; padding-bottom:6px}
-.status i{width:8px; height:8px; flex:none; border-radius:50%; background:var(--ice); box-shadow:0 0 0 4px rgba(168,212,242,.15)}
-.status a{color:var(--glacier)}
-
 /* Шапка */
-header{position:sticky; top:0; z-index:20; background:rgba(15,26,43,.86); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border-bottom:1px solid var(--line)}
+header{position:sticky; top:0; z-index:20; background:rgba(15,26,43,.86); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border-bottom:1px solid var(--line); padding-top:env(safe-area-inset-top,0px)}
 .bar{display:flex; align-items:center; justify-content:space-between; height:64px; gap:16px}
 .logo{font-family:var(--display); font-weight:700; font-size:15px; color:var(--glacier); text-decoration:none; letter-spacing:.02em; display:flex; align-items:center; gap:10px}
 .logo svg{flex:none}
@@ -100,6 +94,8 @@ h2{font-family:var(--display); font-weight:500; font-size:clamp(28px,4.4vw,48px)
 .visual.kap img{width:44%; max-width:200px; border-radius:24%; box-shadow:0 30px 60px -20px rgba(0,0,0,.6)}
 .visual.bl{background:#000; border-color:rgba(184,148,95,.35)}
 .visual.bl img{width:100%; height:100%; object-fit:cover}
+.visual.sf{background:#121413; border-color:rgba(237,161,0,.3)}
+.visual.sf img{width:100%; height:100%; object-fit:cover}
 .kind{font-size:15px; color:var(--ice); margin:0 0 10px}
 .case h3{font-family:var(--display); font-weight:500; font-size:clamp(24px,3vw,34px); line-height:1.1; letter-spacing:-.02em; margin:0 0 6px}
 .case .sub{color:var(--mist); margin:0 0 16px; font-size:16px}
@@ -153,7 +149,6 @@ footer nav a:hover{background:none}
 </head>
 <body>
 <a class="skip" href="#main">Перейти к содержанию</a>
-<div class="status"><div class="wrap"><i aria-hidden="true"></i><span>Сейчас делаю ИИ-ассистента для практики IELTS Speaking на ESP32. <a href="#projects">Подробнее</a></span></div></div>
 <header>
   <div class="wrap bar">
     <a class="logo" href="#top" aria-label="Айдар Памиров, наверх">
@@ -196,7 +191,7 @@ footer nav a:hover{background:none}
           <div><dt>Город</dt><dd>Бишкек</dd></div>
           <div><dt>Учёба</dt><dd>КГТУ им. Раззакова</dd></div>
           <div><dt>Языки</dt><dd>русский, кыргызский, English B2</dd></div>
-          <div><dt>Сделал</dt><dd>Капчык (Android), BLACK LABEL (веб)</dd></div>
+          <div><dt>Сделал</dt><dd>Капчык (Android), BLACK LABEL (веб), SmartFlow AI (симулятор)</dd></div>
           <div><dt>Делаю</dt><dd>IELTS Speaking AI на ESP32</dd></div>
           <div><dt>Цель</dt><dd>SJTU</dd></div>
         </dl>
@@ -206,7 +201,7 @@ footer nav a:hover{background:none}
 
   <section id="projects">
     <div class="wrap">
-      <div class="head"><h2>Проекты</h2><p>Мобильное приложение, веб-система с базой данных и устройство на микроконтроллере.</p></div>
+      <div class="head"><h2>Проекты</h2><p>Мобильное приложение, веб-система с базой данных, симулятор перекрёстка и устройство на микроконтроллере.</p></div>
 
       <article class="case" id="kapchyk">
         <div class="visual kap"><img src="kapchyk.png" alt="Иконка приложения Капчык" width="200" height="200"></div>
@@ -244,6 +239,28 @@ footer nav a:hover{background:none}
         </div>
       </article>
 
+      <article class="case" id="smartflow">
+        <a class="visual sf" href="smartflow.html" aria-label="SmartFlow AI: подробнее о проекте"><img src="smartflow/sim.png" alt="Кадр симуляции перекрёстка: машины поворачивают по траекториям, на въездах очереди" width="1800" height="1800" loading="lazy"></a>
+        <div>
+          <p class="kind">Веб-симулятор · демо онлайн</p>
+          <h3>SmartFlow AI</h3>
+          <p class="sub">Traffic Intersection Simulator</p>
+          <p>Браузерная модель городского перекрёстка. Машины едут по модели следования IDM и поворачивают по настоящим траекториям, светофор управляет каждым манёвром отдельно. Эксперименты сравнивают фиксированный и адаптивный алгоритмы на одном и том же потоке.</p>
+          <ul>
+            <li>Повороты, развороты и конфликтные зоны без столкновений и взаимных блокировок</li>
+            <li>Левый поворот с уступкой встречным или в отдельной фазе</li>
+            <li>Статистика по каждому манёвру и воспроизводимые эксперименты по seed</li>
+            <li>54 автотеста, GitHub Actions проверяет каждую публикацию</li>
+          </ul>
+          <ul class="tags" aria-label="Технологии"><li>TypeScript</li><li>React</li><li>Vite</li><li>Canvas</li><li>IDM</li><li>GitHub Actions</li></ul>
+          <div class="row">
+            <a class="btn p" href="smartflow.html">Подробнее о проекте</a>
+            <a class="btn" href="https://aidarpamirov.github.io/smartflow-ai/" target="_blank" rel="noopener noreferrer">Live Demo
+              <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M5 2h7v7M12 2 4 10" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="sr">(откроется в новой вкладке)</span></a>
+          </div>
+        </div>
+      </article>
+
       <div class="more">
         <article><p class="kind">В работе</p><h3>ИИ-ассистент для IELTS Speaking</h3><p>Карманное устройство на ESP32 с экраном, микрофоном и динамиком: ты говоришь, ИИ слушает, отвечает и помогает прокачать speaking.</p></article>
         <article><p class="kind">Опыт</p><h3>Онлайн-продажи</h3><p>Продавал вещи онлайн: поиск товара, общение с клиентами, ценообразование.</p></article>
@@ -268,7 +285,7 @@ footer nav a:hover{background:none}
   <section>
     <div class="wrap">
       <div class="head"><h2>Навыки и интересы</h2></div>
-      <ul class="chips"><li>Мехатроника</li><li>Робототехника</li><li>ИИ</li><li>ESP32</li><li>Flutter / Dart</li><li>HTML / CSS</li><li>Автоматизация</li><li>Русский, кыргызский</li><li>English B2</li><li>Гитара</li><li>Самбо (2 года)</li></ul>
+      <ul class="chips"><li>Мехатроника</li><li>Робототехника</li><li>ИИ</li><li>ESP32</li><li>Flutter / Dart</li><li>TypeScript / React</li><li>HTML / CSS</li><li>Автоматизация</li><li>Русский, кыргызский</li><li>English B2</li><li>Гитара</li><li>Самбо (2 года)</li></ul>
     </div>
   </section>
 

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SmartFlow AI — Traffic Intersection Simulator · Айдар Памиров</title>
+<meta name="description" content="SmartFlow AI — браузерный симулятор светофорного перекрёстка: модель движения IDM, повороты и развороты по траекториям, конфликтные зоны, фазы по манёврам, сравнение фиксированного и адаптивного управления. Проект Айдара Памирова на TypeScript и React.">
+<link rel="canonical" href="https://aidarpamirov.github.io/smartflow.html">
+<meta property="og:title" content="SmartFlow AI — Traffic Intersection Simulator">
+<meta property="og:description" content="Микроскопическая модель перекрёстка с поворотами, конфликтными зонами и экспериментами. Кейс из портфолио Айдара Памирова.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://aidarpamirov.github.io/smartflow.html">
+<meta property="og:image" content="https://aidarpamirov.github.io/smartflow/cover.png">
+<meta name="theme-color" content="#121413">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Unbounded:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* Палитра кейса повторяет сам симулятор: асфальт, разметка, сигнальный жёлтый и зелёный.
+   Моноширинный шрифт — для подписей и данных, как в интерфейсе симулятора. */
+:root{
+  --asphalt:#121413; --road:#1b1d1f; --road-2:#232628; --road-3:#2d3033;
+  --paper:#eceae4; --mute:#9a9c96; --amber:#eda100; --amber-dim:#9c6c06; --go:#1baf7a;
+  --line:rgba(255,255,255,.11); --line-2:rgba(255,255,255,.22);
+  --display:"Unbounded","Onest",system-ui,sans-serif;
+  --body:"Onest",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --pad:clamp(16px,4vw,40px);
+  box-sizing:border-box;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{background:var(--asphalt); scroll-behavior:smooth; scroll-padding-top:80px; -webkit-text-size-adjust:100%}
+body{margin:0; background:var(--asphalt); color:var(--paper); font-family:var(--body); font-size:17px; line-height:1.65; -webkit-font-smoothing:antialiased; overflow-x:clip; padding-bottom:env(safe-area-inset-bottom,0px)}
+a{color:var(--amber); text-underline-offset:3px}
+a:hover{color:var(--paper)}
+:focus-visible{outline:2px solid var(--amber); outline-offset:3px}
+img{max-width:100%; height:auto; display:block}
+.wrap{max-width:1120px; margin:0 auto; padding:0 var(--pad)}
+.sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+.skip{position:absolute; left:-999px; top:8px; background:var(--amber); color:var(--asphalt); padding:8px 14px; z-index:50}
+.skip:focus{left:8px}
+
+/* Шапка портфолио */
+header{position:sticky; top:0; z-index:20; background:rgba(18,20,19,.86); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border-bottom:1px solid var(--line); padding-top:env(safe-area-inset-top,0px)}
+.bar{display:flex; align-items:center; justify-content:space-between; height:62px; gap:16px}
+.back{display:flex; align-items:center; gap:10px; color:var(--paper); text-decoration:none; font-family:var(--display); font-weight:700; font-size:14px; letter-spacing:.02em}
+.back svg{flex:none}
+nav{display:flex; gap:4px}
+nav a{color:var(--mute); text-decoration:none; font-size:15px; padding:8px 12px}
+nav a:hover{color:var(--paper)}
+@media(max-width:640px){nav a:not(:last-child){display:none}}
+
+/* Hero: текст слева, кадр симуляции справа */
+.hero{padding:clamp(48px,8vw,104px) 0 clamp(48px,7vw,88px); border-bottom:1px solid var(--line)}
+.hero .wrap{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:clamp(32px,5vw,64px); align-items:center}
+.crumb{color:var(--mute); font-size:15px; margin:0 0 24px}
+.crumb a{color:var(--mute)}
+h1{font-family:var(--display); font-weight:700; font-size:clamp(44px,7.4vw,92px); line-height:.95; letter-spacing:-.035em; margin:0 0 16px}
+.subtitle{font-family:var(--mono); font-size:clamp(13px,1.5vw,15px); letter-spacing:.14em; text-transform:uppercase; color:var(--amber); margin:0 0 26px}
+.slogan{font-size:clamp(18px,2.1vw,21px); line-height:1.5; max-width:30em; margin:0 0 32px}
+.row{display:flex; gap:12px; flex-wrap:wrap}
+.btn{display:inline-flex; align-items:center; gap:9px; padding:13px 22px; border-radius:10px; font-size:16px; font-weight:600; text-decoration:none; color:var(--paper); border:1px solid var(--line-2); transition:background .2s, color .2s, border-color .2s}
+.btn:hover{border-color:var(--paper); color:var(--paper)}
+.btn.p{background:var(--amber); border-color:var(--amber); color:var(--asphalt)}
+.btn.p:hover{background:var(--paper); border-color:var(--paper); color:var(--asphalt)}
+.cover{margin:0}
+.cover img{border-radius:18px; border:1px solid var(--line); aspect-ratio:1/1; object-fit:cover; width:100%}
+.cover figcaption{font-size:14px; color:var(--mute); padding:12px 2px 0}
+.signal{display:inline-flex; gap:6px; vertical-align:middle; margin-right:10px}
+.signal i{width:9px; height:9px; border-radius:50%; background:var(--road-3)}
+.signal i:nth-child(2){background:var(--amber)}
+@media(max-width:860px){.hero .wrap{grid-template-columns:1fr}}
+
+/* Секции */
+section{padding:clamp(56px,8vw,104px) 0; border-bottom:1px solid var(--line)}
+.label{display:flex; align-items:center; gap:14px; color:var(--amber); font-family:var(--mono); font-size:13.5px; letter-spacing:.08em; text-transform:uppercase; margin:0 0 14px}
+.label::after{content:""; height:1px; width:48px; background:var(--amber-dim)}
+h2{font-family:var(--display); font-weight:500; font-size:clamp(30px,4.6vw,52px); line-height:1.05; letter-spacing:-.025em; margin:0 0 26px; text-wrap:balance}
+h3{font-weight:600; font-size:18px; line-height:1.35; margin:0 0 8px}
+p{margin:0 0 16px}
+.muted{color:var(--mute)}
+
+.two{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:clamp(24px,5vw,64px)}
+@media(max-width:820px){.two{grid-template-columns:1fr}}
+
+.plain{list-style:none; margin:0; padding:0; border-top:1px solid var(--line)}
+.plain li{padding:14px 0 14px 28px; border-bottom:1px solid var(--line); position:relative}
+.plain li::before{content:""; position:absolute; left:2px; top:23px; width:12px; height:3px; border-radius:2px; background:var(--amber)}
+
+/* Возможности: сетка с линиями, как разметка */
+.features{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border-top:1px solid var(--line); border-left:1px solid var(--line); margin-top:8px}
+.features div{padding:26px 24px 22px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); transition:background .25s}
+.features div:hover{background:var(--road)}
+.features h3{font-family:var(--mono); font-weight:500; font-size:15px; letter-spacing:.02em; color:var(--paper); margin-bottom:8px}
+.features p{margin:0; color:var(--mute); font-size:15.5px}
+@media(max-width:900px){.features{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.features{grid-template-columns:1fr}}
+
+/* Архитектура */
+.arch{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,420px); gap:clamp(24px,5vw,56px); align-items:start}
+.flow{display:flex; flex-direction:column; align-items:stretch}
+.node{border:1px solid var(--line-2); background:var(--road); padding:18px 20px; border-radius:12px}
+.node b{display:block; font-weight:600}
+.node span{display:block; color:var(--mute); font-size:15px}
+.node.core{border-color:var(--amber); background:var(--road-2)}
+.link{display:flex; align-items:center; gap:14px; padding:8px 0 8px 22px; color:var(--mute); font-family:var(--mono); font-size:13px}
+.link::before{content:""; width:1px; height:30px; background:var(--amber-dim); flex:none}
+.fig{margin:0}
+.fig img{border-radius:14px; border:1px solid var(--line)}
+.fig figcaption{font-size:14.5px; color:var(--mute); padding-top:12px}
+@media(max-width:900px){.arch{grid-template-columns:1fr}}
+.fineprint{color:var(--mute); font-size:15px; margin-top:24px; max-width:46em}
+
+/* Результаты эксперимента */
+.nums{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border-top:1px solid var(--line); margin:8px 0 32px}
+.nums div{padding:22px 20px 18px 0}
+.nums div+div{padding-left:20px; border-left:1px solid var(--line)}
+.nums b{display:block; font-family:var(--mono); font-weight:500; font-size:clamp(26px,3.4vw,38px); line-height:1.1; font-variant-numeric:tabular-nums}
+.nums .up{color:var(--go)} .nums .down{color:#ef6b63}
+.nums span{display:block; color:var(--mute); font-size:14.5px; margin-top:6px}
+@media(max-width:760px){.nums{grid-template-columns:repeat(2,minmax(0,1fr))}.nums div:nth-child(3){padding-left:0; border-left:0}.nums div{border-top:1px solid var(--line)}}
+.wide{overflow-x:auto; border-radius:14px; border:1px solid var(--line)}
+.wide img{min-width:640px}
+
+/* Скриншоты */
+.shots{display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:16px; align-items:start}
+.shot{margin:0}
+.shot img{border-radius:14px; border:1px solid var(--line); width:100%}
+.shot.phone img{aspect-ratio:10/18; object-fit:cover; object-position:top}
+.shot figcaption{font-size:15px; padding-top:10px}
+.stackshots{display:grid; gap:16px}
+@media(max-width:820px){.shots{grid-template-columns:1fr}.shot.phone{max-width:360px}}
+
+.stack{display:flex; flex-wrap:wrap; gap:8px; list-style:none; margin:0; padding:0}
+.stack li{border:1px solid var(--line-2); padding:6px 14px; font-size:15px; border-radius:999px}
+
+.links{border-top:1px solid var(--line)}
+.links a{display:flex; justify-content:space-between; align-items:baseline; gap:16px; flex-wrap:wrap; padding:24px 0; border-bottom:1px solid var(--line); color:var(--paper); text-decoration:none; font-family:var(--display); font-weight:500; font-size:clamp(24px,3.6vw,38px)}
+.links a span{font-family:var(--mono); font-size:14px; color:var(--mute); overflow-wrap:anywhere}
+.links a:hover{color:var(--amber)}
+
+footer{padding:36px 0 calc(44px + env(safe-area-inset-bottom,0px)); color:var(--mute); font-size:15px}
+footer .wrap{display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap}
+footer a{color:var(--paper)}
+
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Перейти к содержанию</a>
+<header>
+  <div class="wrap bar">
+    <a class="back" href="index.html#smartflow">
+      <svg width="26" height="26" viewBox="0 0 28 28" aria-hidden="true"><path d="M2 22 10 9l4 6 3-4 9 11Z" fill="none" stroke="#eda100" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      Айдар Памиров
+    </a>
+    <nav aria-label="Навигация портфолио">
+      <a href="index.html#about">Обо мне</a>
+      <a href="index.html#contact">Контакты</a>
+      <a href="index.html#projects">Все проекты</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="hero">
+    <div class="wrap">
+      <div>
+        <p class="crumb"><a href="index.html#projects">Проекты</a> / SmartFlow AI</p>
+        <h1>SmartFlow AI</h1>
+        <p class="subtitle"><span class="signal" aria-hidden="true"><i></i><i></i><i></i></span>Traffic Intersection Simulator</p>
+        <p class="slogan">Модель городского перекрёстка в браузере: машины поворачивают по настоящим траекториям, светофор управляет каждым манёвром, а эксперименты честно сравнивают алгоритмы на одном и том же потоке.</p>
+        <div class="row">
+          <a class="btn p" href="https://aidarpamirov.github.io/smartflow-ai/" target="_blank" rel="noopener noreferrer">Открыть симулятор
+            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M5 2h7v7M12 2 4 10" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span class="sr">(откроется в новой вкладке)</span></a>
+          <a class="btn" href="https://github.com/AidarPamirov/smartflow-ai" target="_blank" rel="noopener noreferrer">Исходный код<span class="sr"> (откроется в новой вкладке)</span></a>
+        </div>
+      </div>
+      <figure class="cover">
+        <img src="smartflow/sim.png" alt="Кадр симуляции: два встречных левых поворота разъезжаются в центре перекрёстка, справа машина заканчивает поворот, на въездах стоят очереди" width="1800" height="1800">
+        <figcaption>Настоящий кадр симуляции. Цвет машины — манёвр: оранжевый — налево, зелёный — направо, синий — прямо, фиолетовый — разворот.</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <section id="overview">
+    <div class="wrap two">
+      <div>
+        <p class="label">Overview</p>
+        <h2>Что это</h2>
+      </div>
+      <div>
+        <p>SmartFlow AI — интерактивный симулятор четырёхстороннего перекрёстка. Машины приезжают случайно, но воспроизводимо: при одном и том же seed поток повторяется. Каждая машина получает маршрут: прямо, налево, направо или разворот. Едет она по модели следования IDM: держит дистанцию, тормозит перед поворотом и останавливается на красный.</p>
+        <p>Можно переключать алгоритм управления светофором, менять потоки и доли манёвров с каждой стороны, режим левого поворота и разметку полос. Отдельная панель прогоняет оба алгоритма на одинаковых условиях и сравнивает ожидание, очереди и пропускную способность, в том числе по каждому манёвру.</p>
+        <p class="muted">Название историческое. Адаптивный алгоритм здесь основан на правилах (очереди и время ожидания), машинного обучения в проекте нет, и сам симулятор это указывает.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="problem">
+    <div class="wrap two">
+      <div>
+        <p class="label">Questions</p>
+        <h2>На какие вопросы отвечает</h2>
+        <p class="muted">Светофор — компромисс между потоками. Модель позволяет проверить решение до того, как его увидят водители.</p>
+      </div>
+      <ul class="plain">
+        <li>Насколько адаптивное управление сокращает ожидание по сравнению с фиксированным циклом</li>
+        <li>Когда левому повороту нужна отдельная фаза, а когда хватает «зелёного с уступкой»</li>
+        <li>Как общая полоса «налево + прямо» влияет на пропускную способность</li>
+        <li>Какой манёвр страдает первым, когда поток растёт</li>
+        <li>Где предел пропускной способности при заданной схеме</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="wrap">
+      <p class="label">Key Features</p>
+      <h2>Возможности</h2>
+      <div class="features">
+        <div><h3>Car-following (IDM)</h3><p>Каждая машина держит безопасную дистанцию и плавно разгоняется и тормозит по модели Intelligent Driver Model.</p></div>
+        <div><h3>Turning trajectories</h3><p>Повороты по кривым Безье, разворот по дуге. Скорость в повороте ограничена боковым ускорением, кузов поворачивается по касательной.</p></div>
+        <div><h3>Conflict zones</h3><p>Зоны, где пути могут пересечься, рассчитаны по прямоугольникам кузовов: пересечения, слияния и расхождения из одной полосы.</p></div>
+        <div><h3>Safe entry</h3><p>Машина въезжает, только если её зоны свободны, и сразу занимает их. Так исключены и столкновения, и взаимные блокировки.</p></div>
+        <div><h3>Signal phases</h3><p>Сигнал для каждого манёвра. Левый поворот с уступкой встречным или в отдельной фазе. План фаз проверяется автоматически.</p></div>
+        <div><h3>Adaptive control</h3><p>Минимальный и максимальный зелёный, разрыв потока на детекторе, «давление» очередей и ожидания, пропуск пустых фаз.</p></div>
+        <div><h3>Per-maneuver stats</h3><p>Обслужено, среднее ожидание и очередь отдельно для прямо, налево, направо и разворота.</p></div>
+        <div><h3>Reproducible experiments</h3><p>Оба алгоритма прогоняются на одних и тех же seed: поток машин в каждой паре идентичен.</p></div>
+        <div><h3>Debug layer</h3><p>Переключатель показывает траектории всех манёвров и зоны, которые сейчас заняты машинами.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="architecture">
+    <div class="wrap">
+      <p class="label">Architecture</p>
+      <h2>Как устроено</h2>
+      <div class="arch">
+        <div class="flow" role="img" aria-label="Схема: генерация спроса передаёт машины в модель движения; перед въездом машина получает допуск по конфликтным зонам и сигналу контроллера; результаты идут в метрики и отрисовку">
+          <div class="node"><b>Генерация спроса</b><span>Пуассоновский поток для каждого въезда, манёвр и полоса выбираются из того же потока случайных чисел. Поэтому спрос не зависит от алгоритма.</span></div>
+          <div class="link">машины с маршрутами</div>
+          <div class="node"><b>Модель движения</b><span>IDM с шагом 0,1 с, лидер ищется на общих участках путей, профиль скорости перед кривыми.</span></div>
+          <div class="link">запрос допуска у стоп-линии</div>
+          <div class="node core"><b>Допуск на въезд</b><span>Сигнал манёвра, очередь в полосе, свободные конфликтные зоны, интервал во встречном потоке для уступающих.</span></div>
+          <div class="link">фазы и статусы манёвров</div>
+          <div class="node"><b>Контроллер светофора</b><span>Фиксированный цикл или адаптивные правила. Жёлтый 3 с и «все красные» 2 с между фазами.</span></div>
+          <div class="link">каждый шаг</div>
+          <div class="node"><b>Метрики и проверки</b><span>Ожидание, задержка, очереди по манёврам. Независимая проверка: нет пересечений кузовов, проездов на красный и двух машин в одной зоне.</span></div>
+        </div>
+        <figure class="fig">
+          <img src="smartflow/sim-debug.png" alt="Отладочный слой: линии траекторий всех манёвров, красным и жёлтым подсвечены конфликтные зоны, которые держат машины внутри перекрёстка" width="1800" height="1800" loading="lazy">
+          <figcaption>Отладочный слой. Линии — траектории манёвров (пунктир — сейчас красный). Красным выделена зона, которую держит машина с допуском, жёлтым — та же зона на конфликтующих путях.</figcaption>
+        </figure>
+      </div>
+      <p class="fineprint">Ядро симуляции — чистый TypeScript без React и браузера, поэтому оно тестируется отдельно. Интерфейс только читает состояние и рисует его на Canvas. Сервера нет: всё работает в браузере и публикуется как статический сайт.</p>
+    </div>
+  </section>
+
+  <section id="results">
+    <div class="wrap">
+      <p class="label">Experiment</p>
+      <h2>Что показал эксперимент</h2>
+      <p class="muted" style="max-width:46em">Нагрузка 2200 авт/ч на четыре въезда, около 14% машин поворачивают налево и 7% разворачиваются, левый поворот с уступкой. По 30 минут на три seed для каждого алгоритма, цифры — среднее.</p>
+      <div class="nums">
+        <div><b class="up">−57%</b><span>ожидание у тех, кто едет прямо</span></div>
+        <div><b class="up">−38%</b><span>максимальная очередь на въезде</span></div>
+        <div><b class="up">+6%</b><span>обслужено машин</span></div>
+        <div><b class="down">+30%</b><span>ожидание левых поворотов</span></div>
+      </div>
+      <div class="wide"><img src="smartflow/experiment.png" alt="Таблица эксперимента: фиксированный и адаптивный алгоритм по среднему ожиданию, ожиданию по манёврам, задержке, очереди, обслуженным машинам и пропускной способности; безопасность 0 / 0 / 0 у обоих" width="2576" height="1228" loading="lazy"></div>
+      <div class="two" style="margin-top:32px">
+        <p>Адаптивный алгоритм заметно разгрузил основной поток. Но левые повороты с уступкой при таком встречном потоке почти не находят интервала и стали ждать ещё дольше: алгоритм отдаёт зелёный тем, у кого больше очередь.</p>
+        <p class="muted">Вывод модели: на этой нагрузке левому повороту нужна отдельная фаза. Её цена тоже видна: при выделенной левой полосе прямому потоку остаётся одна полоса и меньше зелёного, поэтому схему нужно подбирать под конкретные потоки.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="screens">
+    <div class="wrap">
+      <p class="label">Screens</p>
+      <h2>Интерфейс</h2>
+      <div class="shots">
+        <div class="stackshots">
+          <figure class="shot">
+            <img src="smartflow/maneuvers.png" alt="Таблица статистики по манёврам: обслужено, среднее ожидание, очередь сейчас и максимальная очередь для прямо, налево, направо и разворота" width="2576" height="542" loading="lazy">
+            <figcaption>Статистика по каждому манёвру во время симуляции</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="smartflow/cover.png" alt="Фрагмент перекрёстка крупным планом во время смены фаз" width="1200" height="630" loading="lazy">
+            <figcaption>Масштаб «перекрёсток»: видны траектории и светофоры над каждой полосой</figcaption>
+          </figure>
+        </div>
+        <figure class="shot phone">
+          <img src="smartflow/mobile.png" alt="Симулятор на экране телефона: кнопки управления, перекрёсток и легенда манёвров" width="1170" height="2532" loading="lazy">
+          <figcaption>Работает и на телефоне</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="testing">
+    <div class="wrap">
+      <p class="label">Testing</p>
+      <h2>Как проверял</h2>
+      <div class="two">
+        <div>
+          <h3>54 автотеста в репозитории</h3>
+          <ul class="plain">
+            <li>Траектории непрерывны и плавные, поворот заканчивается в нужном направлении</li>
+            <li>Конфликты найдены там, где пути пересекаются, и нет ложных</li>
+            <li>В одной фазе никогда не горят зелёные двум конфликтующим потокам</li>
+            <li>8 комбинаций режимов: ноль пересечений кузовов и проездов на красный</li>
+            <li>Час высокой нагрузки без взаимных блокировок</li>
+            <li>Одинаковый seed даёт одинаковый результат</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Публикация и браузер</h3>
+          <ul class="plain">
+            <li>GitHub Actions запускает все тесты перед каждой публикацией: сломанная версия не выкладывается</li>
+            <li>Проверка в браузере: кнопки, режимы, эксперимент, пустые состояния</li>
+            <li>Светлая и тёмная тема, ширина экрана от 390 px</li>
+            <li>Безопасность считается и в самом интерфейсе: счётчики видны во время работы</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="role">
+    <div class="wrap two">
+      <div>
+        <p class="label">My Role</p>
+        <h2>Что делал я</h2>
+      </div>
+      <div>
+        <ul class="plain">
+          <li>Поставил задачу и требования: что моделировать, какие метрики считать, как сравнивать алгоритмы</li>
+          <li>Разрабатывал с помощью ИИ (AI-assisted development): ставил задачи по этапам, проверял и правил результат</li>
+          <li>Расширил модель поворотами, разворотами, конфликтными зонами и фазами по манёврам</li>
+          <li>Запустил проект у себя и опубликовал на GitHub Pages с автопроверкой</li>
+        </ul>
+        <p class="muted" style="margin-top:20px">Код написан не полностью вручную: большую часть я делал вместе с ИИ-ассистентом и отвечал за постановку задач, требования к честности модели и проверку.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="stack">
+    <div class="wrap">
+      <p class="label">Stack</p>
+      <h2>Технологии</h2>
+      <ul class="stack" aria-label="Технологии проекта">
+        <li>TypeScript</li><li>React 18</li><li>Vite</li><li>Canvas 2D</li><li>SVG-графики без библиотек</li><li>Intelligent Driver Model</li><li>node:test</li><li>GitHub Actions</li><li>GitHub Pages</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="links">
+    <div class="wrap">
+      <p class="label">Project Links</p>
+      <h2>Ссылки</h2>
+      <div class="links">
+        <a href="https://aidarpamirov.github.io/smartflow-ai/" target="_blank" rel="noopener noreferrer">Live Demo <span>aidarpamirov.github.io/smartflow-ai</span></a>
+        <a href="https://github.com/AidarPamirov/smartflow-ai" target="_blank" rel="noopener noreferrer">Repository <span>github.com/AidarPamirov/smartflow-ai</span></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>© 2026 Айдар Памиров, Aidar Pamirov</div>
+    <div>Другой проект: <a href="black-label.html">BLACK LABEL, система записи для барбершопа</a></div>
+  </div>
+</footer>
+</body>
+</html>
